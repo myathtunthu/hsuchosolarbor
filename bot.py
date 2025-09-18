@@ -97,12 +97,74 @@ def send_help(message):
 def start_calculation(message):
     try:
         user_data[message.chat.id] = {}
-        msg = bot.reply_to(message, "🔌 *ကျေးဇူးပြု၍ စုစုပေါင်းဝပ်အား (W) ထည့်ပါ:*\n\nဥပမာ: 500", parse_mode='Markdown')
-        bot.register_next_step_handler(msg, ask_usage_hours)
+        
+        # Create keyboard for wattage knowledge - ဒီခလုတ်တွေကိုပြန်ထည့်ပေးထားပါတယ်
+        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True, row_width=2)
+        buttons = [
+            types.KeyboardButton("သိပါသည်"),
+            types.KeyboardButton("မသိပါ")
+        ]
+        markup.add(*buttons)
+        
+        msg = bot.reply_to(message, "🔌 *သင့်စုစုပေါင်းဝပ်အား (W) ကိုသိပါသလား?*\n\nအောက်က လေးထောင့်ခလုတ်မှနှိပ်၍ ရွေးချယ်ပါ", reply_markup=markup, parse_mode='Markdown')
+        bot.register_next_step_handler(msg, handle_wattage_knowledge)
     except Exception as e:
         print("Error in calculate:", e)
         bot.reply_to(message, "❌ အမှားတစ်ခုဖြစ်နေပါတယ်")
 
+@bot.message_handler(commands=['calculate'])
+def start_calculation(message):
+    try:
+        user_data[message.chat.id] = {}
+        
+        # Create keyboard for wattage knowledge - ဒီခလုတ်တွေကိုပြန်ထည့်ပေးထားပါတယ်
+        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True, row_width=2)
+        buttons = [
+            types.KeyboardButton("သိပါသည်"),
+            types.KeyboardButton("မသိပါ")
+        ]
+        markup.add(*buttons)
+        
+        msg = bot.reply_to(message, "🔌 *သင့်စုစုပေါင်းဝပ်အား (W) ကိုသိပါသလား?*\n\nအောက်က လေးထောင့်ခလုတ်မှနှိပ်၍ ရွေးချယ်ပါ", reply_markup=markup, parse_mode='Markdown')
+        bot.register_next_step_handler(msg, handle_wattage_knowledge)
+    except Exception as e:
+        print("Error in calculate:", e)
+        bot.reply_to(message, "❌ အမှားတစ်ခုဖြစ်နေပါတယ်")
+
+def handle_wattage_knowledge(message):
+    try:
+        chat_id = message.chat.id
+        response = message.text
+        
+        if response == "သိပါသည်":
+            msg = bot.reply_to(message, "🔌 *ကျေးဇူးပြု၍ စုစုပေါင်းဝပ်အား (W) ထည့်ပါ*\n\nဥပမာ: 500", reply_markup=types.ReplyKeyboardRemove(), parse_mode='Markdown')
+            bot.register_next_step_handler(msg, ask_usage_hours)
+        elif response == "မသိပါ":
+            # Send wattage calculation guide
+            wattage_guide = """
+🔋 *အဆင့် 1- သင့်စွမ်းအင်သုံးစွဲမှုကို အကဲဖြတ်ခြင်း။*
+
+သင့်နေ့စဉ်စွမ်းအင်သုံးစွဲမှုကို တွက်ချက်နည်း:
+
+1. *သင့်စက်ပစ္စည်းများကို စာရင်းပြုစုပါ။* - မီးများ၊ ရေခဲသေတ္တာများ၊ လေအေးပေးစက်များ
+
+2. *Wattage ကိုစစ်ဆေးပါ။* - စက်ပစ္စည်းတိုင်းတွင် wattage အဆင့်ရှိသည်
+
+3. *နေ့စဉ်အသုံးပြုမှုကို တွက်ချက်ပါ။* - ဝပ်အား × အသုံးပြုသည့် နာရီ
+
+*ဥပမာ:* 100 watt မီးသီးသည် 5 နာရီကြာအလုပ်လုပ်သည်-
+100W × 5 နာရီ = တစ်နေ့လျှင် 500Wh
+
+🔌 *ကျေးဇူးပြု၍ စုစုပေါင်းဝပ်အား (W) ထည့်ပါ*\n\nဥပမာ: 770
+            """
+            msg = bot.reply_to(message, wattage_guide, parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
+            bot.register_next_step_handler(msg, ask_usage_hours)
+        else:
+            bot.reply_to(message, "❌ ကျေးဇူးပြု၍ 'သိပါသည်' သို့မဟုတ် 'မသိပါ' ကိုရွေးချယ်ပါ")
+            
+    except Exception as e:
+        print("Error in handle_wattage_knowledge:", e)
+        bot.reply_to(message, "❌ အမှားတစ်ခုဖြစ်နေပါတယ်")
 def ask_usage_hours(message):
     try:
         chat_id = message.chat.id
@@ -337,3 +399,4 @@ if __name__ == "__main__":
     except Exception as e:
         print("Bot polling error:", e)
         time.sleep(5)
+
